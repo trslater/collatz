@@ -1,5 +1,7 @@
 from typing import Iterator
 
+import pygraphviz as pgv
+
 
 def build_tree(m: int) -> dict[int, int]:
     T = {}
@@ -28,3 +30,13 @@ def collatz_iter(n: int) -> Iterator[int]:
             n = 3*n + 1
 
         yield n
+
+
+def write_debug_tree(T: dict[int, int], filename: str) -> None:
+    G = pgv.AGraph()
+
+    for u, v in T.items():
+        G.add_edge(u, v)
+
+    G.layout(prog="dot")
+    G.draw(filename)
