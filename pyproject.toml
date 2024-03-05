@@ -8,4 +8,5 @@ version = "0.1.0"
 dependencies = [
     "pytest==8.0.2",
     "pygraphviz==1.12",
+    "pillow==10.2.0",
 ]
