@@ -1,4 +1,4 @@
-from collatz import build_tree, collatz_iter
+from collatz import build_tree, collatz_iter, invert_tree
 
 
 def test_build_tree():
@@ -36,3 +36,29 @@ def test_collatz_iter():
     actual = list(collatz_iter(n))
 
     assert (expected == actual)
+
+
+def test_invert_tree():
+    T = {
+        "b": "a",
+        "c": "a",
+        "d": "a",
+        "e": "b",
+        "f": "b",
+        "g": "b",
+        "h": "b",
+        "i": "c",
+        "j": "c",
+        "k": "d",
+        "l": "d",
+        "m": "d",
+    }
+    expected = {
+        "a": ["b", "c", "d"],
+        "b": ["e", "f", "g", "h"],
+        "c": ["i", "j"],
+        "d": ["k", "l", "m"],
+    }
+    actual = invert_tree(T)
+
+    assert(expected == actual)

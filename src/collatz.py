@@ -40,3 +40,12 @@ def write_debug_tree(T: dict[int, int], filename: str) -> None:
 
     G.layout(prog="dot")
     G.draw(filename)
+
+
+def invert_tree(T: dict[int, int]) -> dict[int, int]:
+    R = {}
+
+    for u, v in T.items():
+        R.setdefault(v, []).append(u)
+
+    return R
