@@ -7,4 +7,5 @@ name = "collatz"
 version = "0.1.0"
 dependencies = [
     "pytest==8.0.2",
+    "pygraphviz==1.12",
 ]
