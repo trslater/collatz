@@ -1,32 +1,89 @@
-from collatz import build_tree, collatz_iter, invert_tree
+from collections import deque
+from collatz import Node, collatz_iter
 
 
-def test_build_tree():
-    m = 10
-    expected = {2: 1,
-                3: 10,
-                4: 2,
-                5: 16,
-                6: 3,
-                7: 22,
-                8: 4,
-                9: 28,
-                10: 5,
-                11: 34,
-                13: 40,
-                14: 7,
-                16: 8,
-                17: 52,
-                20: 10,
-                22: 11,
-                26: 13,
-                28: 14,
-                34: 17,
-                40: 20,
-                52: 26}
-    actual = build_tree(m)
+class TestNode:
+    def test_is_odd_odd(self):
+        node = Node(17)
 
-    assert(expected == actual)
+        assert (node.is_odd == True)
+
+    def test_is_odd_even(self):
+        node = Node(24)
+
+        assert (node.is_odd == False)
+
+    def test_root_of_self(self):
+        node = Node(1)
+
+        assert (node is node.root)
+
+    def test_root(self):
+        node = Node.collatz_tree(10).children[0].children[0]
+
+        assert (node.root.number == 1)
+        assert (node.root.depth == 0)
+        assert (node.root.parent is None)
+
+    def test_collatz_tree(self):
+        root = Node.collatz_tree(7)
+
+        one = Node(1, 0)
+        two = Node(2, 1, one)
+        four = Node(4, 2, two)
+        eight = Node(8, 3, four)
+        sixteen = Node(16, 4, eight)
+        five = Node(5, 5, sixteen)
+        ten = Node(10, 6, five)
+        three = Node(3, 7, ten)
+        six = Node(6, 8, three)
+        twenty = Node(20, 7, ten)
+        forty = Node(40, 8, twenty)
+        thirteen = Node(13, 9, forty)
+        twenty_six = Node(26, 10, thirteen)
+        fifty_two = Node(52, 11, twenty_six)
+        seventeen = Node(17, 12, fifty_two)
+        thirty_four = Node(34, 13, seventeen)
+        eleven = Node(11, 14, thirty_four)
+        twenty_two = Node(22, 15, eleven)
+        seven = Node(7, 16, twenty_two)
+
+        one.children.append(two)
+        two.children.append(four)
+        four.children.append(eight)
+        eight.children.append(sixteen)
+        sixteen.children.append(five)
+        five.children.append(ten)
+        ten.children.extend((twenty, three))
+        three.children.append(six)
+        twenty.children.append(forty)
+        forty.children.append(thirteen)
+        thirteen.children.append(twenty_six)
+        twenty_six.children.append(fifty_two)
+        fifty_two.children.append(seventeen)
+        seventeen.children.append(thirty_four)
+        thirty_four.children.append(eleven)
+        eleven.children.append(twenty_two)
+        twenty_two.children.append(seven)
+
+        stack1 = deque([root])
+        stack2 = deque([one])
+
+        while stack1 and stack2:
+            node1 = stack1.pop()
+            node2 = stack2.pop()
+
+            assert (node1.number == node2.number)
+            assert (node1.depth == node2.depth)
+            assert (node1.parent.number == node2.parent.number
+                    if node1.parent and node2.parent
+                    else node1.parent is None and node2.parent is None)
+
+            for child1 in node1.children:
+                stack1.append(child1)
+
+            for child2 in node2.children:
+                stack2.append(child2)
 
 
 def test_collatz_iter():
@@ -36,29 +93,3 @@ def test_collatz_iter():
     actual = list(collatz_iter(n))
 
     assert (expected == actual)
-
-
-def test_invert_tree():
-    T = {
-        "b": "a",
-        "c": "a",
-        "d": "a",
-        "e": "b",
-        "f": "b",
-        "g": "b",
-        "h": "b",
-        "i": "c",
-        "j": "c",
-        "k": "d",
-        "l": "d",
-        "m": "d",
-    }
-    expected = {
-        "a": ["b", "c", "d"],
-        "b": ["e", "f", "g", "h"],
-        "c": ["i", "j"],
-        "d": ["k", "l", "m"],
-    }
-    actual = invert_tree(T)
-
-    assert(expected == actual)
