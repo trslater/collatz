@@ -1,6 +1,7 @@
 from collections import deque
 from dataclasses import dataclass, field
 from functools import cached_property
+import math
 from typing import Iterator, Self
 
 from PIL import Image, ImageDraw
@@ -10,22 +11,71 @@ import pygraphviz as pgv
 @dataclass
 class Node:
     number: int
-    depth: int = None
     parent: Self = None
     children: list[Self] = field(default_factory=list)
+
+    @cached_property
+    def is_root(self) -> bool:
+        return self.parent is None
+
+    @cached_property
+    def is_leaf(self) -> bool:
+        return len(self.children) == 0
 
     @cached_property
     def is_odd(self) -> bool:
         return self.number % 2
     
     @cached_property
+    def depth(self) -> int:
+        node = self
+        depth = 0
+
+        while not node.is_root:
+            node = node.parent
+            depth += 1
+
+        return depth
+    
+    @cached_property
+    def num_ancestors(self) -> int:
+        stack = deque([self])
+        num_ancestors = 0
+
+        while stack:
+            node = stack.pop()
+
+            for child in node.children:
+                stack.append(child)
+                num_ancestors += 1
+
+        return num_ancestors
+    
+    @cached_property
     def root(self) -> Self:
-        root = self
+        node = self
 
-        while root.parent:
-            root = root.parent
+        while not node.is_root:
+            node = node.parent
 
-        return root
+        return node
+    
+    @cached_property
+    def max_depth(self) -> int:
+        stack = deque([self.root])
+
+        max_depth = 0
+
+        while stack:
+            node = stack.pop()
+
+            if node.depth > max_depth:
+                max_depth = node.depth
+
+            for child in node.children:
+                stack.append(child)
+
+        return max_depth
     
     @classmethod
     def collatz_tree(cls, m: int) -> Self:
@@ -35,34 +85,79 @@ class Node:
             if i in nodes:
                 continue
 
-            nodes[i] = cls(i)
-            u = nodes[i]
+            child = cls(i)
+            nodes[i] = child
 
             for j in collatz_iter(i):
                 if j in nodes:
-                    u.parent = nodes[j]
-                    nodes[j].children.append(u)
+                    child.parent = nodes[j]
+                    child.parent.children.append(child)
                     break
 
-                nodes[j] = cls(j)
+                parent = cls(j)
+                nodes[j] = parent
 
-                u.parent = nodes[j]
-                nodes[j].children.append(u)
+                child.parent = parent
+                parent.children.append(child)
 
-                u = nodes[j]
+                child = parent
 
-        root = nodes[1]
-        root.depth = 0
-        stack = deque([root])
+        return nodes[1]
+    
+    def write_graph(self, filename: str) -> None:
+        graph = pgv.AGraph()
+
+        stack = [self]
 
         while stack:
-            u = stack.pop()
+            node = stack.pop()
 
-            for v in u.children:
-                v.depth = u.depth + 1
-                stack.append(v)
+            for child in node.children:
+                graph.add_edge(node.number, child.number)
+                stack.append(child)
 
-        return root
+        graph.layout(prog="dot")
+        graph.draw(filename)
+
+    def visualize(self) -> None:
+        r = 40
+        dalpha = -math.pi/10
+        dbeta = math.pi/18
+
+        width = 4800
+        height = 6400
+
+        image = Image.new("RGB", (width, height), 0xFFFFFF)
+
+        draw = ImageDraw.Draw(image)
+
+        # Start in the middle
+        stack = deque([(self, math.pi/2, width//2, height//2)])
+
+        while stack:
+            node, theta0, x0, y0 = stack.pop()
+
+            dtheta = dalpha if node.is_odd else dbeta
+            theta1 = theta0 + dtheta
+
+            dx = r*math.cos(theta1)
+            dy = r*math.sin(theta1)
+
+            x1 = x0 + dx
+            y1 = y0 + dy
+
+            t = (self.num_ancestors - node.num_ancestors)/self.num_ancestors
+            s = node.depth/self.max_depth
+
+            fill_color = (0, int(255*s), int(255*t))
+            line_width = (node.num_ancestors + 1)//200
+
+            draw.line((x0, y0, x1, y1), fill=fill_color, width=line_width)
+
+            for child in node.children:
+                stack.append((child, theta1, x1, y1))
+
+        image.show()
 
 
 def collatz_iter(n: int) -> Iterator[int]:
@@ -77,19 +172,3 @@ def collatz_iter(n: int) -> Iterator[int]:
             n = 3*n + 1
 
         yield n
-
-
-def write_debug_tree(root: Node, filename: str) -> None:
-    graph = pgv.AGraph()
-
-    stack = [root]
-
-    while stack:
-        u = stack.pop()
-
-        for v in u.children:
-            graph.add_edge(u.number, v.number)
-            stack.append(v)
-
-    graph.layout(prog="dot")
-    graph.draw(filename)

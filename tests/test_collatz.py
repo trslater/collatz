@@ -3,6 +3,16 @@ from collatz import Node, collatz_iter
 
 
 class TestNode:
+    def test_is_root(self):
+        node = Node(1)
+
+        assert(node.is_root)
+
+    def test_is_leaf(self):
+        node = Node(1)
+
+        assert(node.is_leaf)
+
     def test_is_odd_odd(self):
         node = Node(17)
 
@@ -13,40 +23,51 @@ class TestNode:
 
         assert (node.is_odd == False)
 
+    def test_depth(self):
+        node = Node.collatz_tree(7).children[0].children[0]
+
+        assert(node.depth == 2)
+
+    def test_num_ancestors(self):
+        node = Node.collatz_tree(7)
+
+        assert(node.num_ancestors == 18)
+
     def test_root_of_self(self):
         node = Node(1)
 
         assert (node is node.root)
 
     def test_root(self):
-        node = Node.collatz_tree(10).children[0].children[0]
+        node = Node.collatz_tree(7).children[0].children[0]
 
         assert (node.root.number == 1)
         assert (node.root.depth == 0)
+        assert (node.root.num_ancestors == 18)
         assert (node.root.parent is None)
 
     def test_collatz_tree(self):
         root = Node.collatz_tree(7)
 
-        one = Node(1, 0)
-        two = Node(2, 1, one)
-        four = Node(4, 2, two)
-        eight = Node(8, 3, four)
-        sixteen = Node(16, 4, eight)
-        five = Node(5, 5, sixteen)
-        ten = Node(10, 6, five)
-        three = Node(3, 7, ten)
-        six = Node(6, 8, three)
-        twenty = Node(20, 7, ten)
-        forty = Node(40, 8, twenty)
-        thirteen = Node(13, 9, forty)
-        twenty_six = Node(26, 10, thirteen)
-        fifty_two = Node(52, 11, twenty_six)
-        seventeen = Node(17, 12, fifty_two)
-        thirty_four = Node(34, 13, seventeen)
-        eleven = Node(11, 14, thirty_four)
-        twenty_two = Node(22, 15, eleven)
-        seven = Node(7, 16, twenty_two)
+        one = Node(1)
+        two = Node(2, one)
+        four = Node(4, two)
+        eight = Node(8, four)
+        sixteen = Node(16, eight)
+        five = Node(5, sixteen)
+        ten = Node(10, five)
+        three = Node(3, ten)
+        six = Node(6, three)
+        twenty = Node(20, ten)
+        forty = Node(40, twenty)
+        thirteen = Node(13, forty)
+        twenty_six = Node(26, thirteen)
+        fifty_two = Node(52, twenty_six)
+        seventeen = Node(17, fifty_two)
+        thirty_four = Node(34, seventeen)
+        eleven = Node(11, thirty_four)
+        twenty_two = Node(22, eleven)
+        seven = Node(7, twenty_two)
 
         one.children.append(two)
         two.children.append(four)
@@ -75,6 +96,7 @@ class TestNode:
 
             assert (node1.number == node2.number)
             assert (node1.depth == node2.depth)
+            assert (node1.num_ancestors == node2.num_ancestors)
             assert (node1.parent.number == node2.parent.number
                     if node1.parent and node2.parent
                     else node1.parent is None and node2.parent is None)
