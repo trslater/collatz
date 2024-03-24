@@ -10,3 +10,6 @@ dependencies = [
     "pygraphviz==1.12",
     "pillow==10.2.0",
 ]
+
+[project.scripts]
+collatz = "collatz.cli:run"
